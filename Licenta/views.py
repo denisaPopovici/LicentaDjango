@@ -3,7 +3,7 @@ import os
 from rest_framework import viewsets
 from django.contrib.auth.models import User
 from .serializers import UserSerializer, LocationSerializer, CustomUserSerializer, PostSerializerGet, CommentSerializer, \
-    UserSerializerUpload, UserLikePostSerializer
+    UserSerializerUpload, UserLikePostSerializer, UserFollowSerializer, VisitedLocationsSerializer
 from Licenta.models import *
 from django.http import JsonResponse, QueryDict
 from rest_framework import status
@@ -40,11 +40,20 @@ def get_all_locations(request):
 # @authentication_classes([TokenAuthentication, ])
 # @permission_classes([IsAuthenticated, ])
 def get_all_posts(request):
-    print("here")
     if request.method == 'GET':
         posts = Post.objects.all()
         post_serializer = PostSerializerGet(posts, many=True)
         return JsonResponse(post_serializer.data, safe=False)
+
+@api_view(['GET'])
+# @authentication_classes([TokenAuthentication, ])
+# @permission_classes([IsAuthenticated, ])
+def get_all_users(request):
+    if request.method == 'GET':
+        users = CustomUser.objects.all()
+        print(users)
+        user_serializer = CustomUserSerializer(users, many=True)
+        return JsonResponse(user_serializer.data, safe=False)
 
 
 @api_view(['GET'])
@@ -135,6 +144,42 @@ def get_all_comments(request):
         commentSerializer = CommentSerializer(comments, many=True)
         return JsonResponse(commentSerializer.data, safe=False, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+# @authentication_classes([TokenAuthentication, ])
+# @permission_classes([IsAuthenticated, ])
+def get_all_followers(request, userID):
+    if request.method == "GET":
+        followers = UserFollow.objects.filter(followed=userID)
+        userFollowSerializer = UserFollowSerializer(followers, many=True)
+        return JsonResponse(userFollowSerializer.data, safe=False, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+# @authentication_classes([TokenAuthentication, ])
+# @permission_classes([IsAuthenticated, ])
+def does_user_follow_user(request, followerID, followedID):
+    if request.method == "GET":
+        follows = UserFollow.objects.filter(followed=followedID, follower=followerID)
+        print(follows)
+        userFollowSerializer = UserFollowSerializer(follows, many=True)
+        return JsonResponse(userFollowSerializer.data, safe=False, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+# @authentication_classes([TokenAuthentication, ])
+# @permission_classes([IsAuthenticated, ])
+def get_all_visited_locations(request, userID):
+    if request.method == "GET":
+        locations = VisitedLocations.objects.filter(user=userID)
+        visitedLocationsSerializer = VisitedLocationsSerializer(locations, many=True)
+        return JsonResponse(visitedLocationsSerializer.data, safe=False, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+# @authentication_classes([TokenAuthentication, ])
+# @permission_classes([IsAuthenticated, ])
+def get_all_user_posts(request, userID):
+    if request.method == "GET":
+        posts = Post.objects.filter(user=userID)
+        postSerializer = PostSerializerGet(posts, many=True)
+        return JsonResponse(postSerializer.data, safe=False, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_user_by_token(request, token):
@@ -215,6 +260,19 @@ def add_comment(request, postID, userID):
             print('here')
             comment_serializer = CommentSerializer(comment)
             return JsonResponse(comment_serializer.data)
+        except Exception:
+            return JsonResponse([], safe=False, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def follow(request, followerID, followedID):
+    if (request.method == 'POST'):
+        try:
+            follower = CustomUser.objects.get(id=followerID)
+            followed = CustomUser.objects.get(id=followedID)
+            userFollow = UserFollow.objects.create(follower=follower, followed=followed)
+            userFollow.save()
+            userFollowSerializer = UserFollowSerializer(userFollow)
+            return JsonResponse(userFollowSerializer.data)
         except Exception:
             return JsonResponse([], safe=False, status=status.HTTP_200_OK)
 
