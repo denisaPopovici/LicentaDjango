@@ -44,7 +44,6 @@ class CommentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.user.username')
     profile_image = serializers.ImageField(source='user.image')
 
-
     class Meta:
         model = Comment
         fields = (
@@ -62,12 +61,14 @@ class PostSerializerGet(serializers.ModelSerializer):
     username = serializers.CharField(source='user.user.username')
     profile_image = serializers.ImageField(source='user.image')
     location_name = serializers.CharField(source='location.name')
+    user_id = serializers.IntegerField(source='user.id')
 
     class Meta:
         model = Post
         fields = (
             "id",
             "user",
+            "user_id",
             "username",
             "profile_image",
             "location",
@@ -80,6 +81,16 @@ class PostSerializerGet(serializers.ModelSerializer):
         )
 
 
+class VisitedLocationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VisitedLocations
+        fields = (
+            "user",
+            "location",
+            "points",
+        )
+
+
 class UserLikePostSerializer(serializers.ModelSerializer):
     id_post = serializers.IntegerField(source='post.id')
 
@@ -88,6 +99,7 @@ class UserLikePostSerializer(serializers.ModelSerializer):
         fields = ('post',
                   'id_post',
                   'user')
+
 
 class UserFollowSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,7 +124,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
                   'first_name',
                   'last_name',
                   'about',
-                  'image')
+                  'image',
+                  'level',
+                  )
 
     def create(self, validated_data):
         # hashing the password

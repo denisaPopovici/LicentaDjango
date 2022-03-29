@@ -16,6 +16,7 @@ class CustomUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=False)
     about = models.CharField(max_length=150, default="", blank=False)
     image = models.ImageField()
+    level = models.IntegerField(default=1, blank=False, null=False)
 
 
 class Post(models.Model):
@@ -27,6 +28,13 @@ class Post(models.Model):
     description = models.CharField(max_length=400, default="", blank=False, null=False)
     no_likes = models.IntegerField(default=0, blank=False, null=False)
     no_comments = models.IntegerField(default=0, blank=False, null=False)
+
+
+class VisitedLocations(models.Model):
+    objects = models.Manager()
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=False, blank=False)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, null=False, blank=False)
+    points = models.IntegerField(default=0, blank=False, null=False)
 
 
 class UserLikePost(models.Model):
@@ -42,5 +50,6 @@ class Comment(models.Model):
 
 
 class UserFollow(models.Model):
+    objects = models.Manager()
     follower = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=False, default=-1, related_name='follower')
     followed = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=False, default=-1, related_name='followed')
